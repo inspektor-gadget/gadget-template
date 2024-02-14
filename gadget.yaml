@@ -1,7 +1,7 @@
 name: 'TODO: Fill the gadget name'
 description: 'TODO: Fill the gadget description'
 tracers:
-  events:
+  changeme_mytracer:
     mapName: events
     structName: event
 structs:

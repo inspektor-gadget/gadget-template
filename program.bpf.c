@@ -25,14 +25,12 @@ struct event {
 
 GADGET_TRACER_MAP(events, 1024 * 256);
 
-GADGET_TRACER(changeme_mygadget, events, event);
+GADGET_TRACER(changeme_mytracer, events, event);
 
 SEC("tracepoint/syscalls/sys_enter_chdir")
 int tracepoint__sys_enter_chdir(struct trace_event_raw_sys_enter *ctx) {
   struct event *event;
   __u64 pid_tgid = bpf_get_current_pid_tgid();
-  __u8 comm[TASK_COMM_LEN];
-  int ret;
 
   event = gadget_reserve_buf(&events, sizeof(*event));
   if (!event)

@@ -26,7 +26,7 @@ $ sudo -E ig run ghcr.io/CHANGEME-ORG/CHANGEME-GADGET-NAME:latest
 
 ## Requirements
 
-- ig v0.25.0 (CHANGEME)
+- ig v0.26.0 (CHANGEME)
 - Linux v5.15 (CHANGEME)
 
 ## License (CHANGEME)
