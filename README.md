@@ -20,8 +20,7 @@ Gadget](https://inspektor-gadget.io/). It detects CHANGEME...
 ## How to use
 
 ```bash
-$ export IG_EXPERIMENTAL=true
-$ sudo -E ig run ghcr.io/CHANGEME-ORG/CHANGEME-GADGET-NAME:latest
+$ sudo ig run ghcr.io/CHANGEME-ORG/CHANGEME-GADGET-NAME:latest
 ```
 
 ## Requirements
