@@ -3,8 +3,6 @@ CONTAINER_REPO ?= ghcr.io/changeme-org/changeme-gadget-name
 IMAGE_TAG ?= $(TAG)
 CLANG_FORMAT ?= clang-format
 
-export IG_EXPERIMENTAL = true
-
 .PHONY: build
 build:
 	sudo -E ig image build \
