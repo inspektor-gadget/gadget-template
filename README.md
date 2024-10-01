@@ -7,7 +7,7 @@ Steps to use this template:
 - Choose a name for your repository
 - Click on *Create repository*
 - Update the placeholders (`git grep -i CHANGEME`, `git grep -i TODO`)
-- Write your eBPF program (follow [Hello world gadget](https://inspektor-gadget.io/docs/latest/devel/hello-world-gadget/))
+- Write your eBPF program (follow [Hello world gadget](https://www.inspektor-gadget.io/docs/latest/gadget-devel/hello-world-gadget))
 - Delete this section from README.md
 
 ---
