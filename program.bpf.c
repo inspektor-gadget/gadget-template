@@ -9,7 +9,7 @@
 
 #include <gadget/buffer.h>
 #include <gadget/macros.h>
-#include <gadget/mntns_filter.h>
+#include <gadget/mntns.h>
 #include <gadget/types.h>
 
 #ifndef TASK_COMM_LEN
@@ -38,7 +38,7 @@ int tracepoint__sys_enter_chdir(struct trace_event_raw_sys_enter *ctx) {
 
   /* event data */
   event->timestamp = bpf_ktime_get_boot_ns();
-  event->mntns_id = gadget_get_mntns_id();
+  event->mntns_id = gadget_get_current_mntns_id();
   event->pid = pid_tgid >> 32;
   bpf_get_current_comm(&event->comm, sizeof(event->comm));
 
