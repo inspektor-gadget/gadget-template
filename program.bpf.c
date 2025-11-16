@@ -19,8 +19,8 @@
 struct event {
   gadget_timestamp timestamp;
   gadget_mntns_id mntns_id;
-  __u32 pid;
-  __u8 comm[TASK_COMM_LEN];
+  gadget_pid pid;
+  gadget_comm comm[TASK_COMM_LEN];
 };
 
 GADGET_TRACER_MAP(events, 1024 * 256);
