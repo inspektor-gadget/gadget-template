@@ -8,6 +8,7 @@ Steps to use this template:
 - Click on *Create repository*
 - Update the placeholders (`git grep -i CHANGEME`, `git grep -i TODO`)
 - Write your eBPF program (follow [Hello world gadget](https://www.inspektor-gadget.io/docs/latest/gadget-devel/hello-world-gadget))
+- Write [Unit](https://www.inspektor-gadget.io/blog/2024/12/inspektor-gadget-unittesting-framework) and [Integration](https://www.inspektor-gadget.io/blog/2024/06/introducing-the-new-testing-framework-for-image-based-gadgets) Tests for Gadget.
 - Delete this section from README.md
 
 ---
