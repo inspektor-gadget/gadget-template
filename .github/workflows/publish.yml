@@ -7,6 +7,13 @@ on:
         description: Validated commit to publish
         required: true
         type: string
+    secrets:
+      COSIGN_PRIVATE_KEY:
+        description: Optional Cosign private key in PEM format
+        required: false
+      COSIGN_PASSWORD:
+        description: Password for the Cosign private key
+        required: false
 
 permissions:
   contents: read
@@ -47,10 +54,32 @@ jobs:
           tar -xzf ig-linux-amd64-v0.57.0.tar.gz
           sudo install -m 755 ig /usr/local/bin/ig
 
-      - name: Build and publish to GHCR
+      - name: Check signing configuration
+        id: signing
+        env:
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+        run: |
+          if [[ -n $COSIGN_PRIVATE_KEY ]]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::COSIGN_PRIVATE_KEY is not configured; publishing unsigned images."
+            echo "Signing is not configured; images will be unsigned. See SIGNING.md." \
+              >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Install Cosign
+        if: steps.signing.outputs.enabled == 'true'
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+        with:
+          cosign-release: v3.1.4
+
+      - name: Build, publish, and optionally sign
         env:
           GH_TOKEN: ${{ github.token }}
           GH_ACTOR: ${{ github.actor }}
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
         run: |
           image="ghcr.io/${GITHUB_REPOSITORY,,}"
           tag="sha-$(git rev-parse HEAD)"
@@ -58,10 +87,21 @@ jobs:
           sudo ig image tag "$image:$tag" "$image:latest"
 
           auth_dir=$(mktemp -d "$RUNNER_TEMP/ghcr.XXXXXX")
-          trap 'rm -f -- "$auth_dir/config.json"; rmdir -- "$auth_dir"' EXIT
+          trap 'rm -f -- "$auth_dir/config.json" "$auth_dir/signing-config.json"; rmdir -- "$auth_dir"' EXIT
           printf '%s' "$GH_TOKEN" |
             docker --config "$auth_dir" login ghcr.io --username "$GH_ACTOR" --password-stdin
           sudo ig image push "$image:$tag" --authfile "$auth_dir/config.json"
+          if [[ -n $COSIGN_PRIVATE_KEY ]]; then
+            digest=$(sudo ig image list -o json | jq -er \
+              --arg image "$image" --arg tag "$tag" \
+              '.[] | select(.Repository == $image and .Tag == $tag) | .Digest')
+            cosign signing-config create --out "$auth_dir/signing-config.json"
+            DOCKER_CONFIG="$auth_dir" cosign sign --key env://COSIGN_PRIVATE_KEY \
+              --signing-config "$auth_dir/signing-config.json" \
+              --yes --recursive "$image@$digest"
+            echo "Cosign signature published for the image shared by both tags." \
+              >> "$GITHUB_STEP_SUMMARY"
+          fi
           sudo ig image push "$image:latest" --authfile "$auth_dir/config.json"
           printf 'Published %s:%s and %s:latest.\n' "$image" "$tag" "$image" \
             >> "$GITHUB_STEP_SUMMARY"

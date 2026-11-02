@@ -85,6 +85,7 @@ for type in tracer iterator map-iterator; do
     [[ ! -e $fixture/templates && ! -e $fixture/scripts/init.sh &&
        ! -e $fixture/tests/init.sh ]] || fail "Bootstrap files survived"
     [[ -f $fixture/LICENSE && -f $fixture/LICENSE-bpf.txt &&
+       -f $fixture/SIGNING.md && -f $fixture/.gitignore &&
        -d $fixture/.git && -f $fixture/unrelated.txt &&
        -f $fixture/scripts/user/file ]] || fail "User or license files lost"
     [[ $(git -C "$fixture" rev-parse HEAD) == "$head_before" ]] ||

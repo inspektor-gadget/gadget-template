@@ -54,8 +54,10 @@ initialization run does not republish.
 Repository/organization policies must allow package writes. For an existing
 package, grant this repository Actions access in the GHCR package settings.
 New packages are private by default; change their visibility to allow public
-pulls. Published images are unsigned; use `--verify-image=false` to test them,
-or configure signing for distribution.
+pulls. To enable signing, configure the optional `COSIGN_PRIVATE_KEY` and
+`COSIGN_PASSWORD` Actions secrets. Without a key, CI warns and publishes unsigned
+images. See [Signing and verifying gadgets](SIGNING.md) for setup and public-key
+configuration for `ig`, `kubectl gadget deploy`, and Helm.
 
 ## Customize
 

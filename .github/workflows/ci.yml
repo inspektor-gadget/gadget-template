@@ -52,3 +52,6 @@ jobs:
     uses: ./.github/workflows/publish.yml
     with:
       ref: ${{ github.sha }}
+    secrets:
+      COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+      COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}

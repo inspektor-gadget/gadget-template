@@ -29,6 +29,8 @@ map-iterator starter.
 1. Click [Use this template](https://github.com/new?template_name=gadget-template&template_owner=inspektor-gadget).
 2. Name the repository after your gadget. Initialization derives the gadget name,
    source URLs, and lowercase `ghcr.io/owner/repository` image reference from it.
+   To sign the first published image, configure the optional Actions secrets in
+   [Signing and verifying gadgets](SIGNING.md) before initialization.
 3. In the new repository, open **Actions > Initialize gadget > Run workflow** and
    choose the data source type.
 
@@ -58,7 +60,11 @@ repository/organization policies must permit package creation and writes.
 If the package already exists, grant this repository Actions access in its
 package settings. GHCR packages are private by default; change the package
 visibility if others should be able to pull without authentication.
-Images are unsigned; signing for distribution is not configured.
+Signing is optional: configure `COSIGN_PRIVATE_KEY` and `COSIGN_PASSWORD` as
+repository Actions secrets to enable it. Without a key, CI warns and publishes
+unsigned images. See [Signing and verifying gadgets](SIGNING.md) for key
+generation, secret setup, and trusted-key configuration for `ig` and
+`kubectl gadget` (including Helm deployments).
 
 ### Initialize locally
 
