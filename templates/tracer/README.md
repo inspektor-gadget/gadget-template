@@ -36,7 +36,19 @@ make push IMAGE_TAG=latest
 `--verify-image=false` permits unsigned images; sign images before distributing
 them for production use.
 Push requires registry authentication and permission to publish to `@IMAGE@`.
-Pushing is explicit; neither initialization nor CI publishes an image.
+
+## Automatic publishing
+
+The initialization workflow and validated default-branch pushes publish
+`@IMAGE@:latest` and `@IMAGE@:sha-<full-commit-SHA>` using `GITHUB_TOKEN` with
+`packages: write`. Pull requests and other branches never publish. A repeated
+initialization run does not republish.
+
+Repository/organization policies must allow package writes. For an existing
+package, grant this repository Actions access in the GHCR package settings.
+New packages are private by default; change their visibility to allow public
+pulls. Published images are unsigned; use `--verify-image=false` to test them,
+or configure signing for distribution.
 
 ## Customize
 

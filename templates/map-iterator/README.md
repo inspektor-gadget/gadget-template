@@ -42,7 +42,18 @@ Publish explicitly after authenticating to the registry:
 make push IMAGE_TAG=latest
 ```
 
-Neither initialization nor CI publishes an image.
+## Automatic publishing
+
+The initialization workflow and validated default-branch pushes publish
+`@IMAGE@:latest` and `@IMAGE@:sha-<full-commit-SHA>` using `GITHUB_TOKEN` with
+`packages: write`. Pull requests and other branches never publish. A repeated
+initialization run does not republish.
+
+Repository/organization policies must allow package writes. For an existing
+package, grant this repository Actions access in the GHCR package settings.
+New packages are private by default; change their visibility to allow public
+pulls. Published images are unsigned; use `--verify-image=false` to test them,
+or configure signing for distribution.
 
 ## Customize
 

@@ -23,6 +23,8 @@ jobs:
   initialize:
     if: github.repository != 'inspektor-gadget/gadget-template'
     runs-on: ubuntu-24.04
+    outputs:
+      publish-ref: ${{ steps.commit.outputs.sha }}
     env:
       DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
     steps:
@@ -64,6 +66,7 @@ jobs:
         run: bash scripts/validate.sh
 
       - name: Commit initialization to the default branch
+        id: commit
         if: steps.state.outputs.layout == 'template'
         env:
           DATA_SOURCE_TYPE: ${{ inputs.type }}
@@ -78,4 +81,15 @@ jobs:
             echo "::error::Could not update the default branch. Check branch protection and Actions write permissions, or initialize locally."
             exit 1
           fi
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
           echo "Initialized the $DATA_SOURCE_TYPE gadget on $DEFAULT_BRANCH." >> "$GITHUB_STEP_SUMMARY"
+
+  publish:
+    needs: initialize
+    if: needs.initialize.outputs.publish-ref != ''
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/publish.yml
+    with:
+      ref: ${{ needs.initialize.outputs.publish-ref }}

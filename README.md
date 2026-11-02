@@ -45,9 +45,20 @@ licenses, validation, and workflows remain. Subsequent initialization workflow
 runs succeed with **Already initialized** and do not change files or commits,
 even if another type is selected. Switching types afterward is a manual edit.
 
-The job builds before committing: pushes made by `GITHUB_TOKEN` normally do not
+The job builds before committing, then publishes the initialized commit to GHCR
+through a separate publishing job: pushes made by `GITHUB_TOKEN` normally do not
 trigger a second push workflow. Ordinary CI still runs on later user pushes/PRs.
-Initialization and CI never publish an image.
+After successful validation, default-branch pushes publish new gadget images.
+Pull requests, other branches, uninitialized repositories, and the upstream
+`inspektor-gadget/gadget-template` repository never publish.
+
+Images are published to lowercase `ghcr.io/owner/repository` with `latest` and
+`sha-<full-commit-SHA>` tags. Publishing uses `GITHUB_TOKEN` with `packages: write`;
+repository/organization policies must permit package creation and writes.
+If the package already exists, grant this repository Actions access in its
+package settings. GHCR packages are private by default; change the package
+visibility if others should be able to pull without authentication.
+Images are unsigned; signing for distribution is not configured.
 
 ### Initialize locally
 

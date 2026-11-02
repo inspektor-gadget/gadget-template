@@ -11,8 +11,15 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-24.04
+    outputs:
+      layout: ${{ steps.state.outputs.layout }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Check initialization state
+        id: state
+        run: |
+          layout=$(bash scripts/validate.sh --state)
+          echo "layout=$layout" >> "$GITHUB_OUTPUT"
       - name: Install IG v0.57.0
         env:
           GH_TOKEN: ${{ github.token }}
@@ -31,3 +38,17 @@ jobs:
             rhysd/actionlint:1.7.7 -color
       - name: Validate sources, initialization, and image builds
         run: bash scripts/validate.sh
+
+  publish:
+    needs: validate
+    if: >-
+      github.repository != 'inspektor-gadget/gadget-template' &&
+      github.event_name == 'push' &&
+      github.ref == format('refs/heads/{0}', github.event.repository.default_branch) &&
+      needs.validate.outputs.layout == 'initialized'
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/publish.yml
+    with:
+      ref: ${{ github.sha }}
