@@ -15,22 +15,26 @@ The starter is tested with IG v0.57.0, its matching builder image, and Linux 6.8
 ## Build and run
 
 ```bash
-make build IMAGE_TAG=latest
 # In one terminal:
-PARAMS="--verify-image=false --host --comm bash" make run IMAGE_TAG=latest
+PARAMS="--host --comm bash" make run-local
 # In another bash terminal:
 cd /tmp
 ```
 
 Expect an `events` record with a timestamp, your bash PID, and command name.
-Stop tracing with Ctrl-C. `--verify-image=false` permits your unsigned local image;
-sign images before distributing them for production use.
+Stop tracing with Ctrl-C. `make run-local` builds the current sources, then runs
+the unsigned local image without pulling from a registry. Pass runtime options
+through `PARAMS`. To run an already-built image, use `make run` instead:
 
 ```bash
+make build IMAGE_TAG=latest
+PARAMS="--verify-image=false --host --comm bash" make run IMAGE_TAG=latest
 sudo ig run @IMAGE@:latest --verify-image=false --host -o json
 make push IMAGE_TAG=latest
 ```
 
+`--verify-image=false` permits unsigned images; sign images before distributing
+them for production use.
 Push requires registry authentication and permission to publish to `@IMAGE@`.
 Pushing is explicit; neither initialization nor CI publishes an image.
 

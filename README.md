@@ -92,6 +92,14 @@ After initialization, follow the new README. The supplied Makefile uses
 then run:
 
 ```bash
+PARAMS="--host" make run-local
+```
+
+`make run-local` builds your current sources with the containerized builder, then
+runs the unsigned image without pulling from a registry. Pass runtime options
+through `PARAMS`. For separate build and run steps:
+
+```bash
 make build IMAGE_TAG=latest
 PARAMS="--verify-image=false --host" make run IMAGE_TAG=latest
 ```
@@ -105,8 +113,8 @@ Use `--host` to include host activity; IG otherwise collects from containers.
 Builds validate metadata without changing it. After extending the BPF structures,
 run `make metadata`, then review the updated `gadget.yaml`.
 `IG`, `SUDO`, `BUILDER_IMAGE`, `CONTAINER_REPO`, and `IMAGE_TAG` are overridable
-Make variables. The initial template deliberately cannot build/run/push before
-you choose a starter.
+Make variables. The initial template deliberately cannot build, run, or push
+before you choose a starter.
 
 ## Developing this template
 

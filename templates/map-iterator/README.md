@@ -16,9 +16,8 @@ The starter is tested with IG v0.57.0, its matching builder image, and Linux 6.8
 ## Build and run
 
 ```bash
-make build IMAGE_TAG=latest
 # In one terminal:
-PARAMS="--verify-image=false --host --comm bash --map-fetch-interval 1s -o json" make run IMAGE_TAG=latest
+PARAMS="--host --comm bash --map-fetch-interval 1s -o json" make run-local
 # In another bash terminal:
 for i in 1 2 3; do cd /tmp; done
 ```
@@ -27,6 +26,11 @@ Expect a `calls` record for bash with an aggregated count. Each fetch drains the
 map: a later quiet interval does not replay the previous count. Counts describe
 syscall attempts, not successes, and are not lifetime process totals. Stop with
 Ctrl-C.
+
+`make run-local` builds the current sources, then runs the unsigned local image
+without pulling from a registry. Pass runtime options through `PARAMS`. To build
+and run separately, use `make build IMAGE_TAG=latest`, then
+`PARAMS="--verify-image=false --host" make run IMAGE_TAG=latest`.
 
 `--map-fetch-interval` defaults to 1s; `--map-fetch-count` bounds the number of
 fetches. Use `ig run @IMAGE@:latest --help` for all collection options.

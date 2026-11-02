@@ -27,6 +27,10 @@ build: initialized
 run: initialized
 	$(SUDO) $(IG) run $(CONTAINER_REPO):$(IMAGE_TAG) $$PARAMS
 
+.PHONY: run-local
+run-local: build
+	$(SUDO) $(IG) run $(CONTAINER_REPO):$(IMAGE_TAG) --verify-image=false --pull never $$PARAMS
+
 .PHONY: push
 push: initialized
 	$(SUDO) $(IG) image push $(CONTAINER_REPO):$(IMAGE_TAG)

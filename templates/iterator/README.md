@@ -20,12 +20,16 @@ The kernel must enable `CONFIG_BPF_SYSCALL`, `CONFIG_DEBUG_INFO_BTF`, and
 # Start a process before starting the gadget:
 sleep 300 &
 sleep_pid=$!
-make build IMAGE_TAG=latest
-PARAMS="--verify-image=false --host --pid $sleep_pid --timeout 3 -o json" make run IMAGE_TAG=latest
+PARAMS="--host --pid $sleep_pid --timeout 3 -o json" make run-local
 ```
 
 Expect a `processes` record for the existing sleep process. The session stops
 after three seconds; clean up with `kill "$sleep_pid"`.
+
+`make run-local` builds the current sources, then runs the unsigned local image
+without pulling from a registry. Pass runtime options through `PARAMS`. To build
+and run separately, use `make build IMAGE_TAG=latest`, then
+`PARAMS="--verify-image=false --host" make run IMAGE_TAG=latest`.
 
 The iterator enumerates process leaders rather than every thread. IG controls
 collection cadence through data source fetch settings; "snapshotter" describes

@@ -7,6 +7,16 @@ workspace=$(mktemp -d -t gadget-template-test.XXXXXX)
 trap 'rm -rf -- "$workspace"' EXIT
 fixture=
 
+cat > "$workspace/ig" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\n' "$*" >> "$IG_TEST_LOG"
+if [[ $1 == image && $2 == build ]]; then
+    exit "${IG_TEST_BUILD_STATUS:-0}"
+fi
+EOF
+chmod +x "$workspace/ig"
+
 fail() {
     printf 'FAIL: %s\n' "$*" >&2
     exit 1
@@ -57,6 +67,12 @@ for type in tracer iterator map-iterator; do
     fi
     grep -q 'Initialize first' "$workspace/error.log" ||
         fail "Missing pre-initialization instructions"
+    if make -s -C "$fixture" run-local SUDO= IG="$workspace/ig" \
+        > "$workspace/error.log" 2>&1; then
+        fail "Uninitialized repository allowed run-local"
+    fi
+    grep -q 'Initialize first' "$workspace/error.log" ||
+        fail "Missing run-local pre-initialization instructions"
     workflow_hashes=$(sha256sum "$fixture"/.github/workflows/*.yml)
     head_before=$(git -C "$fixture" rev-parse HEAD)
     printf 'keep me\n' > "$fixture/unrelated.txt"
@@ -93,6 +109,30 @@ for type in tracer iterator map-iterator; do
     make -s -C "$fixture" check
     make -n -C "$fixture" | grep -q ' image build' ||
         fail "Default make target did not build the initialized gadget"
+    export IG_TEST_LOG=$workspace/ig.log
+    : > "$IG_TEST_LOG"
+    PARAMS="--host --timeout 1 -o json" make -s -C "$fixture" run-local \
+        SUDO= IG="$workspace/ig" CONTAINER_REPO=example/local IMAGE_TAG=test \
+        BUILDER_IMAGE=example/builder:test
+    printf '%s\n' \
+        'image build --builder-image example/builder:test -t example/local:test .' \
+        'run example/local:test --verify-image=false --pull never --host --timeout 1 -o json' \
+        > "$workspace/expected.log"
+    diff -u "$workspace/expected.log" "$IG_TEST_LOG" ||
+        fail "run-local did not build then run with local defaults and PARAMS"
+    : > "$IG_TEST_LOG"
+    if IG_TEST_BUILD_STATUS=1 make -s -C "$fixture" run-local \
+        SUDO= IG="$workspace/ig" > "$workspace/error.log" 2>&1; then
+        fail "run-local ignored build failure"
+    fi
+    if grep -q '^run ' "$IG_TEST_LOG"; then
+        fail "run-local ran a stale image after build failure"
+    fi
+    : > "$IG_TEST_LOG"
+    PARAMS="--host" make -s -C "$fixture" run SUDO= IG="$workspace/ig" \
+        CONTAINER_REPO=example/local IMAGE_TAG=test
+    [[ $(cat "$IG_TEST_LOG") == 'run example/local:test --host' ]] ||
+        fail "run no longer runs an existing image unchanged"
     if [[ ${BUILD_GADGETS:-0} == 1 ]]; then
         IMAGE_TAG="ci-$type" bash "$fixture/scripts/validate.sh"
         read -r -a sudo_command <<< "${SUDO-sudo}"
