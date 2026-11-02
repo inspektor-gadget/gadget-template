@@ -1,0 +1,11 @@
+name: "@GADGET_NAME@"
+description: Trace chdir syscall attempts
+homepageURL: https://github.com/@REPOSITORY@
+documentationURL: https://github.com/@REPOSITORY@#readme
+sourceURL: https://github.com/@REPOSITORY@
+datasources:
+  events:
+    fields:
+      timestamp:
+        annotations:
+          description: Time the chdir syscall was entered

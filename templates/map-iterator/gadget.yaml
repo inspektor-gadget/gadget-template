@@ -1,0 +1,16 @@
+name: "@GADGET_NAME@"
+description: Periodically report chdir syscall counts by process
+homepageURL: https://github.com/@REPOSITORY@
+documentationURL: https://github.com/@REPOSITORY@#readme
+sourceURL: https://github.com/@REPOSITORY@
+datasources:
+  calls:
+    fields:
+      process_id:
+        annotations:
+          columns.hidden: "true"
+      calls:
+        annotations:
+          description: Chdir attempts in this fetch interval
+          columns.width: "12"
+          columns.alignment: right

@@ -1,0 +1,81 @@
+name: Initialize gadget
+
+on:
+  workflow_dispatch:
+    inputs:
+      type:
+        description: Data source type (iterator is the snapshotter starter)
+        type: choice
+        required: true
+        options:
+          - tracer
+          - iterator
+          - map-iterator
+
+permissions:
+  contents: write
+
+concurrency:
+  group: initialize-gadget
+  cancel-in-progress: false
+
+jobs:
+  initialize:
+    if: github.repository != 'inspektor-gadget/gadget-template'
+    runs-on: ubuntu-24.04
+    env:
+      DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: Check initialization state
+        id: state
+        run: |
+          state=$(bash scripts/validate.sh --state)
+          echo "layout=$state" >> "$GITHUB_OUTPUT"
+          if [[ $state == initialized ]]; then
+            echo "Already initialized; no files or commits will be changed." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Prepare selected gadget
+        if: steps.state.outputs.layout == 'template'
+        env:
+          DATA_SOURCE_TYPE: ${{ inputs.type }}
+        run: bash scripts/init.sh --type "$DATA_SOURCE_TYPE"
+
+      - name: Install IG v0.57.0
+        if: steps.state.outputs.layout == 'template'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir "$RUNNER_TEMP/ig"
+          gh release download v0.57.0 --repo inspektor-gadget/inspektor-gadget \
+            --pattern ig-linux-amd64-v0.57.0.tar.gz --pattern SHA256SUMS \
+            --dir "$RUNNER_TEMP/ig"
+          cd "$RUNNER_TEMP/ig"
+          grep ' ig-linux-amd64-v0.57.0.tar.gz$' SHA256SUMS | sha256sum --check
+          tar -xzf ig-linux-amd64-v0.57.0.tar.gz
+          sudo install -m 755 ig /usr/local/bin/ig
+
+      - name: Validate generated gadget
+        if: steps.state.outputs.layout == 'template'
+        run: bash scripts/validate.sh
+
+      - name: Commit initialization to the default branch
+        if: steps.state.outputs.layout == 'template'
+        env:
+          DATA_SOURCE_TYPE: ${{ inputs.type }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- README.md config.mk program.bpf.c gadget.yaml \
+            scripts/init.sh tests/init.sh templates
+          git diff --cached --quiet -- .github/workflows
+          git commit -m "Initialize $DATA_SOURCE_TYPE gadget"
+          if ! git push origin "HEAD:$DEFAULT_BRANCH"; then
+            echo "::error::Could not update the default branch. Check branch protection and Actions write permissions, or initialize locally."
+            exit 1
+          fi
+          echo "Initialized the $DATA_SOURCE_TYPE gadget on $DEFAULT_BRANCH." >> "$GITHUB_STEP_SUMMARY"
