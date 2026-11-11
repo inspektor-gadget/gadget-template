@@ -63,7 +63,7 @@ By default, IG trusts the Inspektor Gadget project's key, not your gadget's key.
 For persistent configuration, create or edit the default `~/.ig/config.yaml`.
 Merge the following settings into any existing configuration, replacing the
 first PEM block with the complete contents of `cosign.pub`. The second entry is
-the official IG v0.57.0 public key; keep it to continue running official gadgets:
+the official IG v0.58.0 public key; keep it to continue running official gadgets:
 
 ```yaml
 operator:
@@ -137,12 +137,12 @@ config:
             -----END PUBLIC KEY-----
 ```
 
-Install or upgrade using the matching IG v0.57.0 chart:
+Install or upgrade using the matching IG v0.58.0 chart:
 
 ```bash
 helm upgrade --install gadget \
   oci://ghcr.io/inspektor-gadget/inspektor-gadget/charts/gadget \
-  --namespace gadget --create-namespace --version 0.57.0 \
+  --namespace gadget --create-namespace --version 0.58.0 \
   -f gadget-values.yaml
 kubectl gadget run ghcr.io/your-owner/your-gadget:latest
 ```

@@ -61,7 +61,7 @@ int gadget_count_chdir(struct trace_event_raw_sys_enter *ctx)
 		return 0;
 
 	struct gadget_key key = {
-	    .process_id = bpf_get_current_pid_tgid() >> 32,
+		.process_id = bpf_get_current_pid_tgid() >> 32,
 	};
 	struct gadget_value *value = bpf_map_lookup_elem(&gadget_counts, &key);
 	if (value) {
@@ -76,8 +76,8 @@ int gadget_count_chdir(struct trace_event_raw_sys_enter *ctx)
 	 */
 	gadget_process_populate(&initial.proc);
 	initial.calls = 1;
-	long err =
-	    bpf_map_update_elem(&gadget_counts, &key, &initial, BPF_NOEXIST);
+	long err = bpf_map_update_elem(&gadget_counts, &key, &initial,
+				       BPF_NOEXIST);
 	if (!err)
 		return 0;
 
