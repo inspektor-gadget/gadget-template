@@ -65,10 +65,12 @@ Atomic increments and insert-without-overwrite handle concurrent threads.
 Fetching and updates are concurrent, so interval boundaries are approximate;
 this is an observability example, not lossless accounting.
 
-The map permits 1024 active process keys per interval, roughly 100 KiB plus map
-overhead. Entries are drained rather than silently LRU-evicted. If insertion
-fails, counts can be dropped; inspect `--trace-pipe` diagnostics and adjust the
-capacity for your workload.
+The map permits 10240 distinct process keys between fetches, roughly 1 MiB plus
+map overhead. Longer fetch intervals or busier hosts may need a higher
+`max_entries` in `program.bpf.c`. The map preallocates memory proportional to
+capacity and key/value size, even when empty. Entries are drained rather than
+silently LRU-evicted. If insertion fails, counts for new keys can be dropped;
+inspect `--trace-pipe` diagnostics and adjust the capacity for your workload.
 
 Reuse IG's process population and filtering helpers. `--pid`, `--comm`, and
 container filters restrict collection; mount namespace information enables
