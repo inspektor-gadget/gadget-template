@@ -22,14 +22,15 @@ struct gadget_value {
 	__u64 calls;
 };
 
-/* At most 1024 active processes per fetch interval, roughly 100 KiB plus
- * overhead. Fetching drains entries; a hash map avoids silent LRU eviction.
- * Revisit this budget when enlarging key/value structs: preallocation scales
- * with entry size as well as max_entries.
+/* Allow 10240 distinct processes between fetches, roughly 1 MiB plus map
+ * overhead. Longer fetch intervals or busier hosts may need more entries;
+ * a full map drops counts for new keys. Fetching drains entries without
+ * silent LRU eviction. Preallocated memory scales with max_entries and
+ * key/value size, even when the map is empty.
  */
 struct {
 	__uint(type, BPF_MAP_TYPE_HASH);
-	__uint(max_entries, 1024);
+	__uint(max_entries, 10240);
 	__type(key, struct gadget_key);
 	__type(value, struct gadget_value);
 } gadget_counts SEC(".maps");
