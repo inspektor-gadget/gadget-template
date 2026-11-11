@@ -6,7 +6,7 @@ IMAGE_TAG ?= $(TAG)
 CLANG_FORMAT ?= clang-format
 IG ?= ig
 SUDO ?= sudo
-BUILDER_IMAGE ?= ghcr.io/inspektor-gadget/gadget-builder:v0.57.0
+BUILDER_IMAGE ?= ghcr.io/inspektor-gadget/gadget-builder:v0.58.0
 SOURCES := $(wildcard program.bpf.c templates/*/program.bpf.c)
 
 .PHONY: initialized

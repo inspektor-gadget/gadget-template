@@ -46,7 +46,7 @@ int gadget_trace_chdir(struct trace_event_raw_sys_enter *ctx)
 		return 0;
 
 	struct gadget_event *event =
-	    gadget_reserve_buf(&gadget_events, sizeof(*event));
+		gadget_reserve_buf(&gadget_events, sizeof(*event));
 	if (!event)
 		return 0;
 

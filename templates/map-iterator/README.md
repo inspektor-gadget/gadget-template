@@ -8,10 +8,10 @@ event for every syscall.
 
 - Linux 5.10 or later with BTF (`/sys/kernel/btf/vmlinux`), syscall tracepoints,
   and hash-map batch lookup-and-delete support.
-- IG v0.57.0 and Docker for the default containerized build.
+- IG v0.58.0 and Docker for the default containerized build.
 - Root privileges to build/run with the supplied Makefile.
 
-The starter is tested with IG v0.57.0, its matching builder image, and Linux 6.8.
+The starter is tested with IG v0.58.0, its matching builder image, and Linux 6.8.
 
 ## Build and run
 

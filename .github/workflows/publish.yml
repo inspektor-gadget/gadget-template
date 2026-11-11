@@ -41,17 +41,17 @@ jobs:
             exit 1
           fi
 
-      - name: Install IG v0.57.0
+      - name: Install IG v0.58.0
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir "$RUNNER_TEMP/ig"
-          gh release download v0.57.0 --repo inspektor-gadget/inspektor-gadget \
-            --pattern ig-linux-amd64-v0.57.0.tar.gz --pattern SHA256SUMS \
+          gh release download v0.58.0 --repo inspektor-gadget/inspektor-gadget \
+            --pattern ig-linux-amd64-v0.58.0.tar.gz --pattern SHA256SUMS \
             --dir "$RUNNER_TEMP/ig"
           cd "$RUNNER_TEMP/ig"
-          grep ' ig-linux-amd64-v0.57.0.tar.gz$' SHA256SUMS | sha256sum --check
-          tar -xzf ig-linux-amd64-v0.57.0.tar.gz
+          grep ' ig-linux-amd64-v0.58.0.tar.gz$' SHA256SUMS | sha256sum --check
+          tar -xzf ig-linux-amd64-v0.58.0.tar.gz
           sudo install -m 755 ig /usr/local/bin/ig
 
       - name: Check signing configuration
@@ -90,7 +90,7 @@ jobs:
           trap 'rm -f -- "$auth_dir/config.json" "$auth_dir/signing-config.json"; rmdir -- "$auth_dir"' EXIT
           printf '%s' "$GH_TOKEN" |
             docker --config "$auth_dir" login ghcr.io --username "$GH_ACTOR" --password-stdin
-          sudo ig image push "$image:$tag" --authfile "$auth_dir/config.json"
+          bash scripts/push-image.sh "$image:$tag" --authfile "$auth_dir/config.json"
           if [[ -n $COSIGN_PRIVATE_KEY ]]; then
             digest=$(sudo ig image list -o json | jq -er \
               --arg image "$image" --arg tag "$tag" \
@@ -102,6 +102,6 @@ jobs:
             echo "Cosign signature published for the image shared by both tags." \
               >> "$GITHUB_STEP_SUMMARY"
           fi
-          sudo ig image push "$image:latest" --authfile "$auth_dir/config.json"
+          bash scripts/push-image.sh "$image:latest" --authfile "$auth_dir/config.json"
           printf 'Published %s:%s and %s:latest.\n' "$image" "$tag" "$image" \
             >> "$GITHUB_STEP_SUMMARY"

@@ -14,6 +14,14 @@ printf '%s\n' "$*" >> "$IG_TEST_LOG"
 if [[ $1 == image && $2 == build ]]; then
     exit "${IG_TEST_BUILD_STATUS:-0}"
 fi
+if [[ $1 == image && $2 == push ]]; then
+    [[ $# == 5 && $4 == --authfile && $5 == "$IG_TEST_AUTHFILE" ]] || exit 99
+    attempts=$(grep -c '^image push ' "$IG_TEST_LOG")
+    if ((attempts <= IG_TEST_PUSH_FAILURES)); then
+        printf 'Registry not ready\n' >&2
+        exit 42
+    fi
+fi
 EOF
 chmod +x "$workspace/ig"
 
@@ -85,7 +93,8 @@ for type in tracer iterator map-iterator; do
     [[ ! -e $fixture/templates && ! -e $fixture/scripts/init.sh &&
        ! -e $fixture/tests/init.sh ]] || fail "Bootstrap files survived"
     [[ -f $fixture/LICENSE && -f $fixture/LICENSE-bpf.txt &&
-       -f $fixture/SIGNING.md && -f $fixture/.gitignore &&
+       -f $fixture/SIGNING.md && -f $fixture/scripts/push-image.sh &&
+       -f $fixture/.gitignore &&
        -d $fixture/.git && -f $fixture/unrelated.txt &&
        -f $fixture/scripts/user/file ]] || fail "User or license files lost"
     [[ $(git -C "$fixture" rev-parse HEAD) == "$head_before" ]] ||
@@ -230,3 +239,48 @@ printf '2\n' | env -u GITHUB_ACTIONS -u GITHUB_REPOSITORY \
 grep -q '^GADGET_ITER(' "$fixture/program.bpf.c" || fail "Interactive picker failed"
 
 printf 'All initialization tests passed.\n'
+
+cat > "$workspace/sudo" <<'EOF'
+#!/usr/bin/env bash
+exec "$@"
+EOF
+cat > "$workspace/sleep" <<'EOF'
+#!/usr/bin/env bash
+printf '%s\n' "$1" >> "$IG_TEST_SLEEP_LOG"
+EOF
+chmod +x "$workspace/sudo" "$workspace/sleep"
+
+export IG_TEST_AUTHFILE="$workspace/auth directory/config.json"
+export IG_TEST_SLEEP_LOG="$workspace/sleep.log"
+for failures in 0 2 6; do
+    : > "$IG_TEST_LOG"
+    : > "$IG_TEST_SLEEP_LOG"
+    status=0
+    PATH="$workspace:$PATH" IG_TEST_PUSH_FAILURES=$failures \
+        bash "$source_root/scripts/push-image.sh" \
+        example/gadget:test --authfile "$IG_TEST_AUTHFILE" \
+        > "$workspace/push.log" 2>&1 || status=$?
+    case "$failures" in
+        0) attempts=1; expected_status=0; delays=() ;;
+        2) attempts=3; expected_status=0; delays=(10 20) ;;
+        6) attempts=6; expected_status=42; delays=(10 20 40 80 160) ;;
+    esac
+    [[ $status == "$expected_status" ]] || fail "Wrong push exit status"
+    [[ $(grep -c '^image push ' "$IG_TEST_LOG") == "$attempts" ]] ||
+        fail "Wrong number of push attempts"
+    : > "$workspace/expected-sleep.log"
+    if ((${#delays[@]})); then
+        printf '%s\n' "${delays[@]}" > "$workspace/expected-sleep.log"
+        grep -q 'Registry not ready' "$workspace/push.log" ||
+            fail "Push error was hidden"
+        grep -q '::warning::' "$workspace/push.log" ||
+            fail "Missing retry warning"
+    fi
+    diff -u "$workspace/expected-sleep.log" "$IG_TEST_SLEEP_LOG" ||
+        fail "Wrong push backoff"
+    if ((failures == 6)); then
+        grep -q '::error::Image push failed after 6 attempts' "$workspace/push.log" ||
+            fail "Missing final push error"
+    fi
+done
+printf 'All image push retry tests passed.\n'

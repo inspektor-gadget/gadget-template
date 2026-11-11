@@ -105,7 +105,7 @@ and your normal review/merge process instead.
 ## Build your gadget
 
 After initialization, follow the new README. The supplied Makefile uses
-**IG v0.57.0** and the matching containerized builder; install IG and Docker,
+**IG v0.58.0** and the matching containerized builder; install IG and Docker,
 then run:
 
 ```bash
@@ -139,7 +139,7 @@ before you choose a starter.
 `make check` checks C formatting; `make clang-format` fixes it.
 `bash scripts/validate.sh` runs shell checks, initialization tests, and all three
 generated image builds. It needs ShellCheck, jq, clang-format (CI uses version 18),
-IG v0.57.0, Docker, and sudo access. The retained CI also checks workflow
+IG v0.58.0, Docker, and sudo access. The retained CI also checks workflow
 definitions with actionlint. After initialization, validation checks and builds
 only the selected root gadget.
 
